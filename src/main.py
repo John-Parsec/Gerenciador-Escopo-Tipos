@@ -35,6 +35,10 @@ def gerenciador(file_path):
                 i += 1
                 try:
                     if isIdentifier(words[i]):
+                        if(verifyVarInScope(words[i], pilha)):
+                            print("ERRO: Variável já declarada")
+                            break
+
                         var = words[i]
 
                         if words[i+1] == "=":
@@ -62,6 +66,10 @@ def gerenciador(file_path):
                 i += 1
                 try:
                     if isIdentifier(words[i]):
+                        if(verifyVarInScope(words[i], pilha)):
+                            print("ERRO: Variável já declarada")
+                            break
+
                         var = words[i]
 
                         if words[i+1] == "=":
@@ -100,7 +108,7 @@ def gerenciador(file_path):
                 cont -= 1
             
             if flag:
-                print("ERRO: Variável não declarada")
+                print("ERRO: Variável não declarada: " + words[i+1])
             
 
         elif words[i] == "FIM":
@@ -162,10 +170,11 @@ def getWords(file_path):
     with open(file_path, 'r') as f:
         content = f.read()
 
+    # words = re.findall(r'\b\w+\b|[=,]|"[^"]*"', content) 
+
     words = re.findall(r'\b\w+\b|[=,]|"[^"]*"', content)
-
+    
     return words
-
 
 
 def getVar(lexema, pilha):
@@ -183,6 +192,15 @@ def getVar(lexema, pilha):
     
     if flag:
         return None
+    
+def verifyVarInScope(lexema, pilha):
+    topo = pilha[-1]
+
+    for dic in topo:
+        if lexema == dic['lexema']:
+            return True
+    
+    return False
 
 
 
