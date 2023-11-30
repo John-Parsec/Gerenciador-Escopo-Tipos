@@ -14,22 +14,22 @@ def gerenciador(file_path):
 
     words = getWords2(file_path)
     
-    for word in words:
-        print(word)
+    # for word in words:
+    #     print(word)
 
-    print("\n\n")
+    # print("\n\n")
 
     i = 0
 
     while i < len(words):
         if words[i] == "BLOCO":
             if isBlock(words[i+1]):
-                print("\nBloco: " + words[i+1])
+                print()
                 i += 1
                 escopo = []
                 pilha.append(escopo)
             else:
-                print("ERRO: Bloco inválido")
+                print("ERRO: nome de bloco inválido")
 
         elif words[i] == "NUMERO":
             while True:
@@ -37,7 +37,7 @@ def gerenciador(file_path):
                 try:
                     if isIdentifier(words[i]):
                         if(verifyVarInScope(words[i], pilha)):
-                            print("ERRO: Variável já declarada")
+                            print("ERRO: Variável já declarada!")
                             break
 
                         var = words[i]
@@ -48,12 +48,12 @@ def gerenciador(file_path):
                                 pilha[-1].append({'token': 'tk_identificador','lexema': var,'tipo': "NUMERO", 'valor': words[i]})
                                 
                             else:
-                                print("ERRO: Número inválido")
+                                print("ERRO: Número mal formatado!")
                         else:
                             pilha[-1].append({'token': 'tk_identificador','lexema': var, 'tipo': "NUMERO", 'valor': None})
 
                     else:
-                        print("ERRO: Identificador inválido")
+                        print("ERRO: Identificador mal formatado!")
                     
                     if words[i+1] != ',':
                         break
@@ -68,7 +68,7 @@ def gerenciador(file_path):
                 try:
                     if isIdentifier(words[i]):
                         if(verifyVarInScope(words[i], pilha)):
-                            print("ERRO: Variável já declarada")
+                            print("ERRO: Variável já declarada!")
                             break
 
                         var = words[i]
@@ -79,12 +79,12 @@ def gerenciador(file_path):
                                 pilha[-1].append({'token': 'tk_identificador','lexema': var,'tipo': "CADEIA",'valor': words[i]})
                                 
                             else:
-                                print("ERRO: Cadeia inválida")
+                                print("ERRO: Cadeia mal formatada!")
                         else:
                             pilha[-1].append({'token': 'tk_identificador','lexema': var, 'tipo': "CADEIA", 'valor': None})
 
                     else:
-                        print("ERRO: Identificador inválido")
+                        print("ERRO: Identificador mal formatado!")
                     
                     if words[i+1] != ',':
                         break
@@ -102,14 +102,16 @@ def gerenciador(file_path):
 
                 for dic in topo:
                     if words[i+1] == dic['lexema']:
-                        print(dic['lexema'], " = " , dic['valor'])
+                        print(dic['lexema'], ": " , dic['valor'])
                         flag = False
                         break
                 
                 cont -= 1
             
             if flag:
-                print("ERRO: Variável não declarada: " + words[i+1])
+                print("ERRO: Não é possivel exibir valor de variavel não declarada! ( " + words[i+1] + " )")
+
+            i += 1
             
 
         elif words[i] == "FIM":
@@ -124,16 +126,26 @@ def gerenciador(file_path):
             var = getVar(words[i], pilha)
 
             if var == None:
-                if(words[i+1] == "="):
-                    i += 2
-                    if isNumber(words[i]):
-                        pilha[-1].append({'token': 'tk_identificador','lexema': words[i-1],'tipo': "NUMERO",'valor': words[i]})
-                    elif isString(words[i]):
-                        pilha[-1].append({'token': 'tk_identificador','lexema': words[i-1],'tipo': "CADEIA",'valor': words[i]})
+                try:
+                    if(words[i+1] == "="):
+                        
+                        var2 = getVar(words[i+2], pilha)
+
+                        if var2 != None:
+                            pilha[-1].append({'token': 'tk_identificador','lexema': words[i],'tipo': var2['tipo'],'valor': var2['valor']})
+
+                        else:
+                            i += 2
+                            if isNumber(words[i]):
+                                pilha[-1].append({'token': 'tk_identificador','lexema': words[i-2],'tipo': "NUMERO",'valor': words[i]})
+                            elif isString(words[i]):
+                                pilha[-1].append({'token': 'tk_identificador','lexema': words[i-2],'tipo': "CADEIA",'valor': words[i]})
+                            else:
+                                print("ERRO: Tipo inexistente!")
                     else:
-                        print("ERRO: Valor inválido")
-                else:
-                    print("ERRO: Declaração inválida: " + words[i])
+                        print("ERRO: Declaração inválida! (" + words[i] + ")")
+                except:
+                    pass
 
             else:
                 tipo = var['tipo']
@@ -142,18 +154,27 @@ def gerenciador(file_path):
                     if words[i+1] == "=":
                         i += 2
 
-                        if tipo == "NUMERO":
-                            if isNumber(words[i]):
-                                var['valor'] = words[i]
-                                #pilha[-1].append({'token': 'tk_identificador','lexema': var['lexema'],'tipo': "NUMERO",'valor': words[i]}) #testar
+                        var2 = getVar(words[i], pilha)
+
+                        if var2 != None:
+                            if var2['tipo'] == tipo:
+                                var['valor'] = var2['valor']
+                                #pilha[-1].append({'token': 'tk_identificador','lexema': var['lexema'],'tipo': tipo,'valor': var2['valor']}) #testar
                             else:
-                                print("ERRO: Número inválido")
-                        elif tipo == "CADEIA":
-                            if isString(words[i]):
-                                var['valor'] = words[i]
-                                #pilha[-1].append({'token': 'tk_identificador','lexema': var['lexema'],'tipo': "CADEIA",'valor': words[i]}) #testar
-                            else:
-                                print("ERRO: Cadeia inválida")
+                                print("ERRO: Tipos incompatíveis!")
+                        else:
+                            if tipo == "NUMERO":
+                                if isNumber(words[i]):
+                                    var['valor'] = words[i]
+                                    #pilha[-1].append({'token': 'tk_identificador','lexema': var['lexema'],'tipo': "NUMERO",'valor': words[i]}) #testar
+                                else:
+                                    print("ERRO: Número mal formatado!")
+                            elif tipo == "CADEIA":
+                                if isString(words[i]):
+                                    var['valor'] = words[i]
+                                    #pilha[-1].append({'token': 'tk_identificador','lexema': var['lexema'],'tipo': "CADEIA",'valor': words[i]}) #testar
+                                else:
+                                    print("ERRO: Cadeia mal formatada!")
                 except:
                     pass
             
