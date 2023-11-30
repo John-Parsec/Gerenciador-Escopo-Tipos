@@ -12,7 +12,7 @@ def main(argv, argc):
 def gerenciador(file_path):
     pilha = []
 
-    words = getWords(file_path)
+    words = getWords2(file_path)
     
     for word in words:
         print(word)
@@ -24,6 +24,7 @@ def gerenciador(file_path):
     while i < len(words):
         if words[i] == "BLOCO":
             if isBlock(words[i+1]):
+                print("\nBloco: " + words[i+1])
                 i += 1
                 escopo = []
                 pilha.append(escopo)
@@ -132,7 +133,7 @@ def gerenciador(file_path):
                     else:
                         print("ERRO: Valor inválido")
                 else:
-                    print("ERRO: Variável não declarada: " + words[i])
+                    print("ERRO: Declaração inválida: " + words[i])
 
             else:
                 tipo = var['tipo']
@@ -144,11 +145,13 @@ def gerenciador(file_path):
                         if tipo == "NUMERO":
                             if isNumber(words[i]):
                                 var['valor'] = words[i]
+                                #pilha[-1].append({'token': 'tk_identificador','lexema': var['lexema'],'tipo': "NUMERO",'valor': words[i]}) #testar
                             else:
                                 print("ERRO: Número inválido")
                         elif tipo == "CADEIA":
                             if isString(words[i]):
                                 var['valor'] = words[i]
+                                #pilha[-1].append({'token': 'tk_identificador','lexema': var['lexema'],'tipo': "CADEIA",'valor': words[i]}) #testar
                             else:
                                 print("ERRO: Cadeia inválida")
                 except:
@@ -174,6 +177,44 @@ def getWords(file_path):
 
     words = re.findall(r'\b\w+\b|[=,]|"[^"]*"', content)
     
+    return words
+
+
+def getWords2(file_path):
+    words = []
+
+    word = ""
+    with open(file_path, 'r') as f:
+        while True:
+            char = f.read(1)
+
+            if not char:
+                break
+
+            if char == " " or char == "\n":
+                if word != "":
+                    words.append(word)
+                    word = ""
+            elif char == "=" or char == ",":
+                if word != "":
+                    words.append(word)
+                    word = ""
+                words.append(char)
+            elif char == '"':
+                if word != "":
+                    words.append(word)
+                    word = ""
+                word += char
+                while True:
+                    char = f.read(1)
+                    word += char
+                    if char == '"':
+                        break
+                words.append(word)
+                word = ""
+            else:
+                word += char
+
     return words
 
 
@@ -204,12 +245,8 @@ def verifyVarInScope(lexema, pilha):
 
 
 
-
-
 def isReservedWord(lexema):
     return lexema in ["BLOCO", "CADEIA", "PRINT", "FIM"]
-    
-
 
 def isIdentifier(lexema):
     return re.match(r'^[a-zA-Z][a-zA-Z_]*$', lexema)
