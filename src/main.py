@@ -9,73 +9,77 @@ def main(argv, argc):
     
     gerenciador(file_path)
 
-def gerenciador(file_path):
+def gerenciador(file_path: str):
+    """
+    Função que gerencia as variaveis e escopos do programa.
+    Valida as variaveis e exibe o valor referente quando solicitado no codigo lido.
+    Exibe as mensagens de erro quando necessário.
+
+    Recebe como parametro o caminho do arquivo. (string)
+    """
     pilha = []
-
-    words = getWords2(file_path)
-    
-    # for word in words:
-    #     print(word)
-
-    # print("\n\n")
-
     i = 0
+    words = getWords(file_path)
 
-    while i < len(words):
-        if words[i] == "BLOCO":
-            if isBlock(words[i+1]):
-                print()
-                i += 1
-                escopo = []
-                pilha.append(escopo)
-            else:
-                print("ERRO: nome de bloco inválido")
+    while i < len(words):                   # Percorre todas as palavras do arquivo
+        if words[i] == "BLOCO":             # Se a palavra for BLOCO, tenta criar um novo escopo
+            try:
+                if isBlock(words[i+1]):     # Se a proxima palavra for um nome de bloco válido
+                    print()
+                    i += 1
+                    escopo = []
+                    pilha.append(escopo)    # Adiciona o escopo na pilha
+                else:
+                    print("ERRO: nome de bloco inválido")
+            except:
+                print("ERRO: bloco sem nome")   # Se não tiver proxima palavra, chegou no fim do arquivo
 
-        elif words[i] == "NUMERO":
-            while True:
+        elif words[i] == "NUMERO":          # Se a palavra for NUMERO, tenta criar uma variavel do tipo NUMERO
+            while True:                     # Enquanto não chegar no fim da linha
                 i += 1
                 try:
-                    if isIdentifier(words[i]):
-                        if(verifyVarInScope(words[i], pilha)):
+                    if isIdentifier(words[i]):          # Se a palavra for um identificador válido
+                        if(verifyVarInScope(words[i], pilha)):      # Varifica se a variavel já existe no escopo atual
                             print("ERRO: Variável já declarada!")
                             break
 
-                        var = words[i]
+                        var = words[i]                  # Salva o lexema do identificador
 
-                        if words[i+1] == "=":
+                        if words[i+1] == "=":           # Se a proxima palavra for um =, tenta atribuir um valor a variavel
                             i += 2
-                            if isNumber(words[i]):
+                            if isNumber(words[i]):      # Se a palavra for um número válido, adiciona a variavel na pilha
                                 pilha[-1].append({'token': 'tk_identificador','lexema': var,'tipo': "NUMERO", 'valor': words[i]})
                                 
                             else:
                                 print("ERRO: Número mal formatado!")
+
                         else:
                             pilha[-1].append({'token': 'tk_identificador','lexema': var, 'tipo': "NUMERO", 'valor': None})
 
                     else:
                         print("ERRO: Identificador mal formatado!")
                     
-                    if words[i+1] != ',':
+                    if words[i+1] != ',':       # Se o proximo lexema for virgula, continua lendo a linha
                         break
                     else:
                         i += 1
-                except:
+                except:            # Se não tiver proximo lexema, chegou no fim do arquivo
                     break
 
-        elif words[i] == "CADEIA":
-            while True:
+        elif words[i] == "CADEIA":      # Se a palavra for CADEIA, tenta criar uma variavel do tipo CADEIA
+            while True:                 # Enquanto não chegar no fim da linha
                 i += 1
                 try:
-                    if isIdentifier(words[i]):
-                        if(verifyVarInScope(words[i], pilha)):
+                    if isIdentifier(words[i]):                      # Se a palavra for um identificador válido, tenta criar a variavel do tipo CADEIA
+                        if(verifyVarInScope(words[i], pilha)):      # Varifica se a variavel já existe no escopo atual
                             print("ERRO: Variável já declarada!")
                             break
 
                         var = words[i]
 
-                        if words[i+1] == "=":
+                        if words[i+1] == "=":           # Se a proxima palavra for um =, tenta atribuir um valor a variavel
                             i += 2
-                            if isString(words[i]):
+                            if isString(words[i]):      # Se a palavra for uma cadeia válida, adiciona a variavel na pilha
                                 pilha[-1].append({'token': 'tk_identificador','lexema': var,'tipo': "CADEIA",'valor': words[i]})
                                 
                             else:
@@ -86,60 +90,61 @@ def gerenciador(file_path):
                     else:
                         print("ERRO: Identificador mal formatado!")
                     
-                    if words[i+1] != ',':
+                    if words[i+1] != ',':       # Se o proximo lexema for virgula, continua lendo a linha
                         break
                     else:
                         i += 1
-                except:
+
+                except:       # Se não tiver proxima palavra, chegou no fim do arquivo
                     break
 
-        elif words[i] == "PRINT":
+        elif words[i] == "PRINT":           # Se a palavra for PRINT, tenta exibir o valor da variavel
             cont = len(pilha) - 1
             flag = True
+            i += 1
 
-            while cont >= 0 and flag:
+            while cont >= 0 and flag:       # Percorre a pilha de escopos a partir do topo até encontrar a variavel
                 topo = pilha[cont]
 
                 for dic in topo:
-                    if words[i+1] == dic['lexema']:
+                    if words[i] == dic['lexema']:       # Se achar a variavel, exibe o valor e sai do loop
                         print(dic['lexema'], ": " , dic['valor'])
                         flag = False
                         break
                 
                 cont -= 1
             
-            if flag:
-                print("ERRO: Não é possivel exibir valor de variavel não declarada! ( " + words[i+1] + " )")
+            if flag:        # Se não achar a variavel, exibe mensagem de erro
+                print("ERRO: Não é possivel exibir variavel não declarada! ( " + words[i] + " )")
 
-            i += 1
-            
-
-        elif words[i] == "FIM":
+        elif words[i] == "FIM":         # Se a palavra for FIM, tenta remover o escopo atual da pilha
             i += 1
             if len(pilha) > 0:
-                pilha.pop()
+                pilha.pop()             # Remove o escopo atual(topo da pilha)
             else:
                 print("ERRO: Fim sem bloco")
                 break
 
-        elif isIdentifier(words[i]):
-            var = getVar(words[i], pilha)
+        elif isIdentifier(words[i]):            # Se a palavra for um identificador válido, tenta criar uma variavel
+            var = getVar(words[i], pilha)       # Verifica se a variavel já existe na pilha, se existir, retorna o dicionario com as informações da variavel
 
-            if var == None:
+            if var == None:                     # Se a variavel não existir na pilha, tenta criar uma nova variavel
                 try:
-                    if(words[i+1] == "="):
+                    if(words[i+1] == "="):              # Se a proxima palavra for um =, tenta atribuir um valor a variavel
                         
-                        var2 = getVar(words[i+2], pilha)
+                        var2 = getVar(words[i+2], pilha)        # Verifica se está atribuindo o valor de uma variavel existente, se sim, pega os dados da variavel
 
-                        if var2 != None:
+                        if var2 != None:                        # Se a variavel existir na pilha, adiciona uma nova variavel na pilha com os dados da variavel existente
                             pilha[-1].append({'token': 'tk_identificador','lexema': words[i],'tipo': var2['tipo'],'valor': var2['valor']})
 
-                        else:
+                        else:                                   # Se não, trata como uma atribuição normal
                             i += 2
                             if isNumber(words[i]):
                                 pilha[-1].append({'token': 'tk_identificador','lexema': words[i-2],'tipo': "NUMERO",'valor': words[i]})
+
                             elif isString(words[i]):
                                 pilha[-1].append({'token': 'tk_identificador','lexema': words[i-2],'tipo': "CADEIA",'valor': words[i]})
+
                             else:
                                 print("ERRO: Tipo inexistente!")
                     else:
@@ -147,103 +152,99 @@ def gerenciador(file_path):
                 except:
                     pass
 
-            else:
-                tipo = var['tipo']
+            else:                           # Se a variavel existir na pilha, tenta atribuir um valor a ela
+                tipo = var['tipo']          # Salva o tipo da variavel
 
                 try:
                     if words[i+1] == "=":
                         i += 2
 
-                        var2 = getVar(words[i], pilha)
+                        var2 = getVar(words[i], pilha)      # Verifica se está atribuindo o valor de uma variavel existente, se sim, pega os dados da variavel
 
                         if var2 != None:
-                            if var2['tipo'] == tipo:
+                            if var2['tipo'] == tipo:        # Se a variavel existir na pilha e for do mesmo tipo, atribui o valor da variavel
                                 var['valor'] = var2['valor']
-                                #pilha[-1].append({'token': 'tk_identificador','lexema': var['lexema'],'tipo': tipo,'valor': var2['valor']}) #testar
+
                             else:
-                                print("ERRO: Tipos incompatíveis!")
-                        else:
-                            if tipo == "NUMERO":
+                                print("ERRO: Não é possivel atribuir! Tipos incompatíveis!")
+
+                        else:                                   # Se não for uma variavel, trata como uma atribuição normal
+                            if tipo == "NUMERO":                # Se a variavel for do tipo NUMERO, tenta atribuir um valor do tipo NUMERO
                                 if isNumber(words[i]):
                                     var['valor'] = words[i]
-                                    #pilha[-1].append({'token': 'tk_identificador','lexema': var['lexema'],'tipo': "NUMERO",'valor': words[i]}) #testar
+
                                 else:
                                     print("ERRO: Número mal formatado!")
-                            elif tipo == "CADEIA":
+
+                            elif tipo == "CADEIA":              # Se a variavel for do tipo CADEIA, tenta atribuir um valor do tipo CADEIA
                                 if isString(words[i]):
                                     var['valor'] = words[i]
-                                    #pilha[-1].append({'token': 'tk_identificador','lexema': var['lexema'],'tipo': "CADEIA",'valor': words[i]}) #testar
+
                                 else:
                                     print("ERRO: Cadeia mal formatada!")
                 except:
                     pass
             
-
-
         i += 1
 
-    # for escopo in pilha:
-    #     print("Escopo:")
-    #     for var in escopo:
-    #         print(var)
-    #     print("")
-        
-        
-        
-def getWords(file_path):
-    with open(file_path, 'r') as f:
-        content = f.read()
+def getWords(file_path: str) -> list:
+    """
+    Função que retorna uma lista de todas as palavras do arquivo, considerando também numeros(inteiros e reais), 
+    qualquer cadeia entre aspas duplas(incluindo as aspas), virgulas e igual  como palavras completas.
 
-    # words = re.findall(r'\b\w+\b|[=,]|"[^"]*"', content) 
+    Recebe como parametro o caminho do arquivo. (string)
+    Retorna uma lista de strings.
+    """
 
-    words = re.findall(r'\b\w+\b|[=,]|"[^"]*"', content)
-    
-    return words
-
-
-def getWords2(file_path):
     words = []
 
     word = ""
     with open(file_path, 'r') as f:
         while True:
-            char = f.read(1)
+            char = f.read(1)        # Lê um caracter do arquivo
 
-            if not char:
+            if not char:            # Se o caracter for vazio, chegou ao fim do arquivo
                 break
 
-            if char == " " or char == "\n":
+            if char == " " or char == "\n":     # Se o caracter for espaço ou quebra de linha, chegou ao fim da palavra
                 if word != "":
                     words.append(word)
                     word = ""
-            elif char == "=" or char == ",":
-                if word != "":
+
+            elif char == "=" or char == ",":    # Se o caracter for igual ou virgula, chegou ao fim da palavra
+                if word != "":          # Se a palavra não for vazia, adiciona na lista
                     words.append(word)
                     word = ""
-                words.append(char)
-            elif char == '"':
-                if word != "":
+                words.append(char)      # Adiciona o caracter na lista
+
+            elif char == '"':           # Se o caracter for aspas duplas, chegou ao fim da palavra
+                if word != "":          # Se a palavra não for vazia, adiciona na lista
                     words.append(word)
                     word = ""
-                word += char
-                while True:
+                word += char            # Começa a cadeia com aspas duplas
+                while True:             # Enquanto não chegar no fim da cadeia
                     char = f.read(1)
                     word += char
-                    if char == '"':
+                    if char == '"':     # Se o caracter for aspas duplas, chegou no fim da cadeia
                         break
                 words.append(word)
                 word = ""
+
             else:
                 word += char
 
     return words
 
+def getVar(lexema: str, pilha: list) -> dict:
+    """
+    Função que retorna um dicionario com as informações da variavel, caso ela exista na pilha. (Considera sempre o escopo mais proximo)
 
-def getVar(lexema, pilha):
+    Recebe como parametro uma sitrng, sendo o lexema da variavel, e uma lista, sendo a pilha de escopos. (string, list)
+    Retorna um dicionario com as informações da variavel ou None caso ela não exista. (dict)
+    """
     cont = len(pilha) - 1
-    flag = True
 
-    while cont >= 0 and flag:
+    while cont >= 0:
         topo = pilha[cont]
 
         for dic in topo:
@@ -252,10 +253,15 @@ def getVar(lexema, pilha):
         
         cont -= 1
     
-    if flag:
-        return None
+    return None
     
-def verifyVarInScope(lexema, pilha):
+def verifyVarInScope(lexema: str, pilha: list) -> bool:
+    """
+    Função que verifica se a variavel existe no escopo atual.
+
+    Recebe como parametro uma sitrng, sendo o lexema da variavel, e uma lista, sendo a pilha de escopos. (string, list)
+    Retorna True caso a variavel exista no escopo atual e False caso ela não exista. (bool)
+    """
     topo = pilha[-1]
 
     for dic in topo:
@@ -264,22 +270,21 @@ def verifyVarInScope(lexema, pilha):
     
     return False
 
+def isIdentifier(lexema: str) -> bool:
+    """Função que verifica se o lexema é um identificador válido."""
+    return bool(re.match(r'^[a-zA-Z][a-zA-Z_]*$', lexema))
 
+def isNumber(lexema: str) -> bool:
+    """Função que verifica se o lexema é um número válido."""
+    return bool(re.match(r'[+-]?\d+(\.\d+)?', lexema))
 
-def isReservedWord(lexema):
-    return lexema in ["BLOCO", "CADEIA", "PRINT", "FIM"]
+def isString(lexema: str) -> bool:
+    """Função que verifica se o lexema é uma cadeia de caracteres entre aspas."""
+    return bool(re.match(r'"[^"]*"', lexema))
 
-def isIdentifier(lexema):
-    return re.match(r'^[a-zA-Z][a-zA-Z_]*$', lexema)
-
-def isNumber(lexema):
-    return re.match(r'[+-]?\d+(\.\d+)?', lexema)
-
-def isString(lexema):
-    return re.match(r'"[^"]*"', lexema)
-
-def isBlock(lexema):
-    return re.match(r'^_[a-zA-Z0-9]+_$', lexema)
+def isBlock(lexema: str) -> bool:
+    """Função que verifica se o lexema é um nome de bloco válido."""
+    return bool(re.match(r'^_[a-zA-Z0-9]+_$', lexema))
 
 
 if __name__ == '__main__':
