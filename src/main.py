@@ -24,22 +24,21 @@ def gerenciador(file_path: str):
     while i < len(words):                   # Percorre todas as palavras do arquivo
         if words[i] == "BLOCO":             # Se a palavra for BLOCO, tenta criar um novo escopo
             try:
-                if isBlock(words[i+1]):     # Se a proxima palavra for um nome de bloco válido
-                    print()
+                if isBlock(words[i+1]):
                     i += 1
                     escopo = []
                     pilha.append(escopo)    # Adiciona o escopo na pilha
                 else:
                     print("ERRO: nome de bloco inválido")
-            except:
-                print("ERRO: bloco sem nome")   # Se não tiver proxima palavra, chegou no fim do arquivo
+            except:                                         # Se não tiver proxima palavra, chegou no fim do arquivo 
+                print("ERRO: bloco sem nome")   
 
         elif words[i] == "NUMERO":          # Se a palavra for NUMERO, tenta criar uma variavel do tipo NUMERO
-            while True:                     # Enquanto não chegar no fim da linha
+            while True:                     
                 i += 1
                 try:
-                    if isIdentifier(words[i]):          # Se a palavra for um identificador válido
-                        if(verifyVarInScope(words[i], pilha)):      # Varifica se a variavel já existe no escopo atual
+                    if isIdentifier(words[i]):         
+                        if(verifyVarInScope(words[i], pilha)):      # Verifica se a variavel já existe no escopo atual
                             print("ERRO: Variável já declarada!")
                             break
 
@@ -47,7 +46,7 @@ def gerenciador(file_path: str):
 
                         if words[i+1] == "=":           # Se a proxima palavra for um =, tenta atribuir um valor a variavel
                             i += 2
-                            if isNumber(words[i]):      # Se a palavra for um número válido, adiciona a variavel na pilha
+                            if isNumber(words[i]):      
                                 pilha[-1].append({'token': 'tk_identificador','lexema': var,'tipo': "NUMERO", 'valor': words[i]})
                                 
                             else:
@@ -59,7 +58,7 @@ def gerenciador(file_path: str):
                     else:
                         print("ERRO: Identificador mal formatado!")
                     
-                    if words[i+1] != ',':       # Se o proximo lexema for virgula, continua lendo a linha
+                    if words[i+1] != ',':       # Se a proxima palavra for virgula, continua lendo a linha
                         break
                     else:
                         i += 1
@@ -67,11 +66,11 @@ def gerenciador(file_path: str):
                     break
 
         elif words[i] == "CADEIA":      # Se a palavra for CADEIA, tenta criar uma variavel do tipo CADEIA
-            while True:                 # Enquanto não chegar no fim da linha
+            while True:                 
                 i += 1
                 try:
-                    if isIdentifier(words[i]):                      # Se a palavra for um identificador válido, tenta criar a variavel do tipo CADEIA
-                        if(verifyVarInScope(words[i], pilha)):      # Varifica se a variavel já existe no escopo atual
+                    if isIdentifier(words[i]):                      
+                        if(verifyVarInScope(words[i], pilha)):      # Verifica se a variavel já existe no escopo atual
                             print("ERRO: Variável já declarada!")
                             break
 
@@ -79,7 +78,7 @@ def gerenciador(file_path: str):
 
                         if words[i+1] == "=":           # Se a proxima palavra for um =, tenta atribuir um valor a variavel
                             i += 2
-                            if isString(words[i]):      # Se a palavra for uma cadeia válida, adiciona a variavel na pilha
+                            if isString(words[i]):
                                 pilha[-1].append({'token': 'tk_identificador','lexema': var,'tipo': "CADEIA",'valor': words[i]})
                                 
                             else:
@@ -90,7 +89,7 @@ def gerenciador(file_path: str):
                     else:
                         print("ERRO: Identificador mal formatado!")
                     
-                    if words[i+1] != ',':       # Se o proximo lexema for virgula, continua lendo a linha
+                    if words[i+1] != ',':       # Se a proxima palavra for virgula, continua lendo a linha
                         break
                     else:
                         i += 1
@@ -117,27 +116,27 @@ def gerenciador(file_path: str):
             if flag:        # Se não achar a variavel, exibe mensagem de erro
                 print("ERRO: Não é possivel exibir variavel não declarada! ( " + words[i] + " )")
 
-        elif words[i] == "FIM":         # Se a palavra for FIM, tenta remover o escopo atual da pilha
+        elif words[i] == "FIM":         # Se a palavra for FIM, remover o escopo atual da pilha
             i += 1
             if len(pilha) > 0:
-                pilha.pop()             # Remove o escopo atual(topo da pilha)
+                pilha.pop()             
             else:
                 print("ERRO: Fim sem bloco")
                 break
 
-        elif isIdentifier(words[i]):            # Se a palavra for um identificador válido, tenta criar uma variavel
+        elif isIdentifier(words[i]):            
             var = getVar(words[i], pilha)       # Verifica se a variavel já existe na pilha, se existir, retorna o dicionario com as informações da variavel
 
             if var == None:                     # Se a variavel não existir na pilha, tenta criar uma nova variavel
                 try:
                     if(words[i+1] == "="):              # Se a proxima palavra for um =, tenta atribuir um valor a variavel
                         
-                        var2 = getVar(words[i+2], pilha)        # Verifica se está atribuindo o valor de uma variavel existente, se sim, pega os dados da variavel
+                        var2 = getVar(words[i+2], pilha)        # Verifica se está atribuindo o valor de uma variavel existente
 
-                        if var2 != None:                        # Se a variavel existir na pilha, adiciona uma nova variavel na pilha com os dados da variavel existente
+                        if var2 != None:                        
                             pilha[-1].append({'token': 'tk_identificador','lexema': words[i],'tipo': var2['tipo'],'valor': var2['valor']})
 
-                        else:                                   # Se não, trata como uma atribuição normal
+                        else:                                   
                             i += 2
                             if isNumber(words[i]):
                                 pilha[-1].append({'token': 'tk_identificador','lexema': words[i-2],'tipo': "NUMERO",'valor': words[i]})
@@ -153,7 +152,7 @@ def gerenciador(file_path: str):
                     pass
 
             else:                           # Se a variavel existir na pilha, tenta atribuir um valor a ela
-                tipo = var['tipo']          # Salva o tipo da variavel
+                tipo = var['tipo']          
 
                 try:
                     if words[i+1] == "=":
